@@ -29,40 +29,26 @@ int main(int argc,char **argv){
             NUM_THREADS = atoi(argv[1]);
             N = atoi(argv[2]);
         }
-        /*FILE *in;
-        in=fopen("data.in","r");
-        if(in==NULL) {
-                printf("Can not open 'data.in' "); exit(1);
-        }
-
-        i=fscanf(in,"%d", &N);
-        if(i<1) {
-                printf("Wrong 'data.in' (N ...)"); exit(2);
-        }
-        */
+        
         A = (double *) malloc(N * N * sizeof(double));
         b = (double *) malloc(N * sizeof(double));
         X = (double *) malloc(N * sizeof(double));
         printf("A x b ( N = %d )\n----------------------------------\n",N);
         wtime(&time0);
-        /* initialize array A*/
         for (i = 0; i <= N - 1; i++) {
             for(j = 0; j <= N - 1; j++) {
                 A(i,j) = rand();
-                //printf("%lf ", A[i * N + j]);
             }
-            //printf("\n");
         }
         for (i = 0; i < N; i++) {
             b[i] = rand();
-            //printf("%lf ", b[i]);
         }
         printf("\n");
         int sum;
 #ifdef _OPENMP
         omp_set_num_threads(NUM_THREADS);
 #endif
-        #pragma omp parallel for private(j, sum) schedule(dynamic) num_threads(NUM_THREADS)
+#pragma omp parallel for private(j, sum) schedule(dynamic) num_threads(NUM_THREADS)
         for(i = 0; i < N; i++) {
                 sum = 0;
                 for(j = 0; j < N; j++) {
@@ -80,7 +66,6 @@ int main(int argc,char **argv){
         free(A);
         free(b);
         free(X);
-        //free(X);
         return 0;
 }
 
