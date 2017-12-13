@@ -8,10 +8,10 @@ int ProcRank;
 
 
 int main(int argc, char* argv[]) {
-    double* pMatrix;  // Первый аргумент – исходная матрица
-    double* pVector;  // Второй аргумент – исходный вектор
-    double* pResult;  // Результат умножения матрицы на вектор
-    int Size;        // Размеры исходных матрицы и вектора
+    double* pMatrix;
+    double* pVector;
+    double* pResult;
+    int Size;
     double* pProcRows;
     double* pProcResult;
     int RowNum;
@@ -21,8 +21,7 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &ProcNum);
     MPI_Comm_rank(MPI_COMM_WORLD, &ProcRank);
 //-----------------------------------------------------------------------------------------
-    //ProcessInitialization(pMatrix, pVector, pResult, pProcRows,                        pProcResult, Size, RowNum);
-    int RestRows;	// Количество строк матрицы, которые еще    // не распределены
+    int RestRows;
     if (ProcRank == 0) {
         do {
             Size = atoi(argv[1]);
@@ -43,7 +42,6 @@ int main(int argc, char* argv[]) {
     pProcResult = (double *) malloc(RowNum * sizeof(double));
     if (ProcRank == 0) {
         pMatrix = (double *) malloc(Size * Size * sizeof(double));
-      //RandomDataInitialization(pMatrix, pVector, Size);
         for (i=0; i<Size; i++) {
             pVector[i] = rand();
             for (j=0; j<Size; j++)
@@ -52,21 +50,13 @@ int main(int argc, char* argv[]) {
     }
 
     Start = MPI_Wtime();
-    //DataDistribution(pMatrix, pProcRows, pVector, Size, RowNum);
 //-----------------------------------------------------------------------
-    int *pSendNum;    	// Количество элементов, посылаемых процессу
-    int *pSendInd;    	// Индекс первого элемента данных,
-  			// посылаемого процессу
-    RestRows=Size;	// Количество строк матрицы, которые еще
-  			// не распределены
+    int *pSendNum;
+    int *pSendInd; 
+    RestRows=Size;
     MPI_Bcast(pVector, Size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    // Выделение памяти для хранения временных объектов
     pSendInd = (int *) malloc(ProcNum * sizeof(int));
     pSendNum = (int *) malloc(ProcNum * sizeof(int));
-
-    // Определение положения строк матрицы, предназначенных
-    // каждому процессу
     RowNum = (Size/ProcNum);
     pSendNum[0] = RowNum*Size;
     pSendInd[0] = 0;
@@ -76,34 +66,23 @@ int main(int argc, char* argv[]) {
       pSendNum[i] = RowNum*Size;
       pSendInd[i] = pSendInd[i-1]+pSendNum[i-1];
     }
-    // Рассылка строк матрицы
     MPI_Scatterv(pMatrix, pSendNum, pSendInd, MPI_DOUBLE, pProcRows,
       pSendNum[ProcRank], MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    // Освобождение памяти
     free(pSendNum);
     free(pSendInd);
 //---------------------------------------------------------------------
-    // Параллельное выполнение умножения матрицы на вектор
-    //ParallelResultCalculation(pProcRows, pVector, pProcResult,   Size, RowNum);
     for (i=0; i<RowNum; i++) {
         pProcResult[i] = 0;
         for (j=0; j<Size; j++) pProcResult[i] += pProcRows[i*Size+j]*pVector[j];
     }
 //---------------------------------------------------------------------
-    // Сбор результирующего вектора на всех процессах
-    //ResultReplication(pProcResult, pResult, Size, RowNum);
-    int *pReceiveNum;  // Количество элементов, посылаемых процессом
-    int *pReceiveInd;  // Индекс элемента данных в результирующем
-                       // векторе
-    RestRows=Size; // Количество строк матрицы, которые еще не
-                       // распределены
 
-    // Выделение памяти для временных объектов
+    int *pReceiveNum;
+    int *pReceiveInd; 
+    RestRows=Size; 
     pReceiveNum = (int *) malloc(ProcNum * sizeof(int));
     pReceiveInd = (int *) malloc(ProcNum * sizeof(int));
 
-    // Определение положения блоков результирующего вектора
     pReceiveInd[0] = 0;
     pReceiveNum[0] = Size/ProcNum;
     for (i=1; i<ProcNum; i++) {
@@ -111,10 +90,7 @@ int main(int argc, char* argv[]) {
         pReceiveNum[i] = RestRows/(ProcNum-i);
         pReceiveInd[i] = pReceiveInd[i-1]+pReceiveNum[i-1];
     }
-    // Сбор всего результирующего вектора на всех процессах
     MPI_Allgatherv(pProcResult, pReceiveNum[ProcRank], MPI_DOUBLE, pResult, pReceiveNum, pReceiveInd, MPI_DOUBLE, MPI_COMM_WORLD);
-
-    // Освобождение памяти
     free(pReceiveNum);
     free(pReceiveInd);
 //--------------------------------------------------------------------
@@ -124,10 +100,8 @@ int main(int argc, char* argv[]) {
         printf("Time of execution = %f\n", Duration);
     }
 //--------------------------------------------------------------------
-    // Завершение процесса вычислений
-    //ProcessTermination(pMatrix, pVector, pResult, pProcRows,             pProcResult);
     if (ProcRank == 0) free(pMatrix);
-    free(pVector);
+    free(b);
     free(pResult);
     free(pProcRows);
     free(pProcResult);
